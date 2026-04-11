@@ -18,7 +18,7 @@ Key finding: both ML models achieve **99% accuracy on the primary dataset** but 
 
 ## Live Demo
 
-> [ShieldAI on Streamlit Cloud](https://your-app-url.streamlit.app) ← replace with your URL after deployment
+> [ShieldAI on Streamlit Cloud](https://cybersec520-phishing-detector-qeylmuvykpjrvp96rarklg.streamlit.app/)
 
 ---
 
@@ -147,7 +147,7 @@ The app is deployed on Streamlit Cloud.
 
 **Deployment steps:**
 1. Push repo to GitHub
-2. Go to [(https://share.streamlit.io) ## need to update link 
+2. Go to [https://share.streamlit.io](https://share.streamlit.io)
 3. Connect GitHub repo → select `app.py` as main file
 4. Add secrets under Advanced Settings
 5. Click Deploy
