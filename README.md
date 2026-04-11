@@ -104,8 +104,8 @@ The app will open at `http://localhost:8501`
 |---|---|---|---|
 | CEAS_08 (Primary) | Random Forest | 98% | 0.9992 |
 | CEAS_08 (Primary) | XGBoost | **99%** | **0.9995** |
-| SpamAssassin (Secondary) | Random Forest | 67% | 0.7983 |
-| SpamAssassin (Secondary) | XGBoost | 67% | 0.7775 |
+| SpamAssassin (Secondary) | Random Forest | 67% | 0.7202 |
+| SpamAssassin (Secondary) | XGBoost | 67% | 0.8183 |
 
 ### Key Finding: The 32-Point Generalization Gap
 

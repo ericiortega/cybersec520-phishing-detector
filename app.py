@@ -10,7 +10,7 @@ from scipy.sparse import hstack, csr_matrix
 from openai import OpenAI
 from dotenv import load_dotenv
 import plotly.graph_objects as go
-
+#  Claude was used on was used in the development of the Streamlit app UI and for assistance with code structure.
 load_dotenv()
 
 st.set_page_config(
@@ -1380,20 +1380,20 @@ with tab2:
     with m3:
         st.metric("SpamAssassin Acc.", "67%", delta="-32pts generalization gap")
     with m4:
-        st.metric("SpamAssassin AUC", "0.798", delta="-0.20 vs primary")
+        st.metric("SpamAssassin AUC", "0.818", delta="-0.18 vs primary")
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
     cm1, cm2 = st.columns(2, gap="medium")
     with cm1:
         st.plotly_chart(
-            make_cm(4369, 69, 93, 3462, "Random Forest — Confusion Matrix"),
+            make_cm(4369, 0, 104, 3358, "Random Forest — Confusion Matrix"),
             use_container_width=True,
             config={"displayModeBar": False},
         )
     with cm2:
         st.plotly_chart(
-            make_cm(4369, 31, 47, 3462, "XGBoost — Confusion Matrix"),
+            make_cm(4326, 43, 35, 3427, "XGBoost — Confusion Matrix"),
             use_container_width=True,
             config={"displayModeBar": False},
         )
