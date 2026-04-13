@@ -1,9 +1,9 @@
-# ShieldAI — Phishing Email Detector
+# ShieldAI - Phishing Email Detector
 **CYBERSEC 520 Final Project · Duke University · April 2026**
 
 Name: Eric Ortega Rodriguez 
 
-A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application. An initiative that is needed to stay on top of constant cybersecurity threats sophistication. 
+A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application. Built for CYBERSEC 520 to explore how traditional ML and LLMs handle evolving phishing threats. 
 
 ---
 
@@ -11,10 +11,10 @@ A side-by-side comparison of traditional ML and LLM-based phishing detection, de
 
 This project builds and compares two approaches to phishing email detection:
 
-- **ML Models (Random Forest + XGBoost)** — trained on the CEAS_08 dataset using TF-IDF vectorization and 11 handcrafted signal features
-- **LLM Agent (GPT 4.1 Mini via Duke LiteLLM)** — a tool-calling agent that reasons semantically about email intent using 4 investigative tools
+- **ML Models (Random Forest + XGBoost)** - trained on the CEAS_08 dataset using TF-IDF vectorization and 11 handcrafted signal features
+- **LLM Agent (GPT 4.1 Mini via Duke LiteLLM)** - a tool-calling agent that reasons semantically about email intent using 4 investigative tools
 
-Key finding: both ML models achieve **99% accuracy on the primary dataset** but collapse to **67% on SpamAssassin** (secondary dataset) — a 32-point generalization gap that demonstrates why LLM-based detection is more robust to evolving phishing attacks.
+Key finding: both ML models achieve **99% accuracy on the primary dataset** but collapse to **67% on SpamAssassin** (secondary dataset) - a 32-point generalization gap that demonstrates why LLM-based detection is more robust to evolving phishing attacks.
 
 ---
 
@@ -112,24 +112,24 @@ The app will open at `http://localhost:8501`
 
 ### Key Finding: The 32-Point Generalization Gap
 
-Both models collapse from ~99% to ~67% accuracy on SpamAssassin — a 32-point drop caused by distribution shift. Critically, **both models achieve 0% phishing recall on SpamAssassin**, defaulting to predicting every email as legitimate. Three root causes:
+Both models collapse from ~99% to ~67% accuracy on SpamAssassin - a 32-point drop caused by distribution shift. Critically, **both models achieve 0% phishing recall on SpamAssassin**, defaulting to predicting every email as legitimate. Three root causes:
 
-1. **Vocabulary mismatch** — TF-IDF vocabulary was learned from 2008-era CEAS patterns; SpamAssassin uses different terminology
-2. **Class distribution shift** — CEAS_08 is 56% phishing vs SpamAssassin's 33%, miscalibrating the decision boundary
-3. **Feature distribution shift** — handcrafted features (urgency keywords, free email domains) are less predictive in SpamAssassin
+1. **Vocabulary mismatch** - TF-IDF vocabulary was learned from 2008-era CEAS patterns; SpamAssassin uses different terminology
+2. **Class distribution shift** - CEAS_08 is 56% phishing vs SpamAssassin's 33%, miscalibrating the decision boundary
+3. **Feature distribution shift** - handcrafted features (urgency keywords, free email domains) are less predictive in SpamAssassin
 
-This is precisely why LLM-based detection is more robust: the LLM agent reasons about **intent and context**, not surface patterns — making it adaptive to evolving attacks without retraining.
+This is precisely why LLM-based detection is more robust: the LLM agent reasons about **intent and context**, not surface patterns - making it adaptive to evolving attacks without retraining.
 
 ---
 
-## LLM Agent — How It Works
+## LLM Agent - How It Works
 
 The agent uses a 4-tool investigation loop via the OpenAI tool-calling API:
 
 | Step | Tool | What It Checks |
 |---|---|---|
 | 1 | `analyze_sender` | Domain spoofing, free email providers, brand impersonation |
-| 2 | `check_urgency` | Social engineering tactics — urgency, fear, greed language |
+| 2 | `check_urgency` | Social engineering tactics - urgency, fear, greed language |
 | 3 | `extract_urls` | Suspicious URLs, raw IPs, URL shorteners, obfuscated links |
 | 4 | `assess_context` | Credential requests, unusual payment methods, suspicious intent |
 
@@ -188,14 +188,14 @@ pip install -r requirements.txt
 
 The Jupyter notebook (`notebook/final_phishing_detector.ipynb`) covers:
 
-- **Section 0** — Threat model (threat actor, targets, evasion, operational context)
-- **Section 1** — Setup and imports
-- **Section 2** — Data loading and exploratory analysis
-- **Section 3** — Preprocessing and feature engineering (TF-IDF + 11 handcrafted features)
-- **Section 4** — Model training (Random Forest + XGBoost)
-- **Section 5** — Primary dataset evaluation (CEAS_08)
-- **Section 6** — Generalizability testing (SpamAssassin) including threshold tuning analysis
-- **Section 7** — Model export and demo sample generation
+- **Section 0** - Threat model (threat actor, targets, evasion, operational context)
+- **Section 1** - Setup and imports
+- **Section 2** - Data loading and exploratory analysis
+- **Section 3** - Preprocessing and feature engineering (TF-IDF + 11 handcrafted features)
+- **Section 4** - Model training (Random Forest + XGBoost)
+- **Section 5** - Primary dataset evaluation (CEAS_08)
+- **Section 6** - Generalizability testing (SpamAssassin) including threshold tuning analysis
+- **Section 7** - Model export and demo sample generation
 
 ---
 
