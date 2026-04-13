@@ -1,9 +1,9 @@
 # ShieldAI - Phishing Email Detector
 **CYBERSEC 520 Final Project · Duke University · April 2026**
 
-Name: Eric Ortega Rodriguez 
+Name: Eric Ortega Rodriguez
 
-A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application. Built for CYBERSEC 520 to explore how traditional ML and LLMs handle evolving phishing threats. 
+A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application. Built for CYBERSEC 520 to explore how traditional ML and LLMs handle evolving phishing threats.
 
 ---
 
@@ -14,7 +14,7 @@ This project builds and compares two approaches to phishing email detection:
 - **ML Models (Random Forest + XGBoost)** - trained on the CEAS_08 dataset using TF-IDF vectorization and 11 handcrafted signal features
 - **LLM Agent (GPT 4.1 Mini via Duke LiteLLM)** - a tool-calling agent that reasons semantically about email intent using 4 investigative tools
 
-Key finding: both ML models achieve **99% accuracy on the primary dataset** but collapse to **67% on SpamAssassin** (secondary dataset) - a 32-point generalization gap that demonstrates why LLM-based detection is more robust to evolving phishing attacks.
+Key finding: both ML models achieve **99% accuracy on the primary dataset** but collapse to **~60% on SpamAssassin** (secondary dataset) - a 39-point generalization gap that demonstrates why LLM-based detection is more robust to evolving phishing attacks.
 
 ---
 
@@ -92,12 +92,12 @@ The app will open at `http://localhost:8501`
 
 ## Datasets
 
-| Dataset | Size | Role | Source |
-|---|---|---|---|
-| CEAS_08 | 39,154 emails | Primary training + testing | CEAS 2008 Spam Challenge |
-| SpamAssassin | 5,796 emails | Generalizability testing only | Apache SpamAssassin Public Corpus |
+| Dataset | Size | Role |
+|---|---|---|
+| CEAS_08 | 39,154 emails | Primary training & evaluation dataset |
+| SpamAssassin | 5,796 emails | Secondary generalizability test only (never used in training) |
 
-> **Note:** SpamAssassin was never used in training. It serves exclusively as the out-of-distribution generalizability test, as required by the project rubric.
+> Both datasets sourced from Kaggle.
 
 ---
 
@@ -105,20 +105,20 @@ The app will open at `http://localhost:8501`
 
 | Dataset | Model | Accuracy | F1 (weighted) | AUC-ROC |
 |---|---|---|---|---|
-| CEAS_08 (Primary) | Random Forest | 98.3% | 98.5% | 0.9992 |
-| CEAS_08 (Primary) | XGBoost | **99.2%** | **99.3%** | **0.9994** |
-| SpamAssassin (Secondary) | Random Forest | 67.3% | 54.1% | 0.7896 |
-| SpamAssassin (Secondary) | XGBoost | 67.2% | 54.1% | 0.8126 |
+| CEAS_08 (Primary) | Random Forest | 98% | 98% | 0.9993 |
+| CEAS_08 (Primary) | XGBoost | **99%** | **99%** | **0.9994** |
+| SpamAssassin (Secondary) | Random Forest | 63% | 60% | 0.5383 |
+| SpamAssassin (Secondary) | XGBoost | 60% | 57% | 0.5442 |
 
-### Key Finding: The 32-Point Generalization Gap
+### Key Finding: The 39-Point Generalization Gap
 
-Both models collapse from ~99% to ~67% accuracy on SpamAssassin - a 32-point drop caused by distribution shift. Critically, **both models achieve 0% phishing recall on SpamAssassin**, defaulting to predicting every email as legitimate. Three root causes:
+Both models collapse from ~99% to ~60% accuracy on SpamAssassin — a 39-point drop caused by distribution shift. Critically, **both models achieve near-zero phishing recall on SpamAssassin**, defaulting to predicting the majority of emails as legitimate. Three root causes:
 
 1. **Vocabulary mismatch** - TF-IDF vocabulary was learned from 2008-era CEAS patterns; SpamAssassin uses different terminology
 2. **Class distribution shift** - CEAS_08 is 56% phishing vs SpamAssassin's 33%, miscalibrating the decision boundary
 3. **Feature distribution shift** - handcrafted features (urgency keywords, free email domains) are less predictive in SpamAssassin
 
-This is precisely why LLM-based detection is more robust: the LLM agent reasons about **intent and context**, not surface patterns - making it adaptive to evolving attacks without retraining.
+This is precisely why LLM-based detection is more robust: the LLM agent reasons about **intent and context**, not surface patterns — making it adaptive to evolving attacks without retraining.
 
 ---
 

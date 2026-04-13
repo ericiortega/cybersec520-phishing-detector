@@ -15,7 +15,7 @@ import plotly.graph_objects as go
 load_dotenv()
 
 st.set_page_config(
-    page_title="ShieldAI — Email Threat Detection",
+    page_title="ShieldAI - Email Threat Detection",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -311,14 +311,14 @@ hr { border-color: rgba(0,0,0,0.07) !important; }
     unsafe_allow_html=True,
 )
 
-# ── client ────────────────────────────────────────────────────────────────────
+# client
 client = OpenAI(
     base_url=os.environ.get("LITELLM_URL", "https://litellm.oit.duke.edu"),
     api_key=os.environ.get("LITELLM_TOKEN"),
 )
 MODEL = "GPT 4.1 Mini"
 
-# tool step definitions — order matters
+# tool step definitions, order matters
 TOOL_STEPS = [
     (
         "analyze_sender",
@@ -331,7 +331,7 @@ TOOL_STEPS = [
 ]
 
 
-# ── models ────────────────────────────────────────────────────────────────────
+# models
 @st.cache_resource
 def load_models():
     with open("models/xgb_model.pkl", "rb") as f:
@@ -355,12 +355,12 @@ def load_samples():
 samples = load_samples()
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# helpers
 def safe(text, limit=None):
     """HTML-escape a string and optionally truncate."""
     s = str(text).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     if limit and len(s) > limit:
-        s = s[:limit] + "…"
+        s = s[:limit] + "..."
     return s
 
 
@@ -372,7 +372,7 @@ def clean_body(raw):
     return t
 
 
-# ── features ──────────────────────────────────────────────────────────────────
+# features
 def extract_features(df):
     f = pd.DataFrame()
     f["sender_is_free_email"] = (
@@ -446,7 +446,7 @@ def predict_ml(sender, subject, body):
     return prob, fired
 
 
-# ── gauge ─────────────────────────────────────────────────────────────────────
+# gauge
 def make_gauge(prob):
     color = "#ff3b30" if prob > 0.7 else "#ff9f0a" if prob > 0.4 else "#34c759"
     fig = go.Figure(
@@ -488,7 +488,7 @@ def make_gauge(prob):
     return fig
 
 
-# ── tracker ───────────────────────────────────────────────────────────────────
+# tracker
 def step_found_flag(result: str) -> bool:
     """Return True if this tool result contains a meaningful red flag."""
     r = result.lower()
@@ -567,7 +567,7 @@ def render_tracker(
             line = "" if is_last else '<div class="t-line-pending"></div>'
             name_html = (
                 f'<span class="t-name-active">{safe(label)}</span>'
-                f'<span class="t-time">running…</span>'
+                f'<span class="t-time">running...</span>'
             )
             detail = f'<div class="t-desc">{safe(description)}</div>'
         else:
@@ -593,20 +593,20 @@ def render_tracker(
     return html
 
 
-# ── tools ─────────────────────────────────────────────────────────────────────
+# tools
 def analyze_sender(sender):
     if not sender:
         return "No sender provided"
     flags = []
     if re.search(r"gmail|yahoo|hotmail|outlook", sender, re.I):
-        flags.append("free email provider — unusual for business")
+        flags.append("free email provider, unusual for business")
     if re.search(r"\d{3,}", sender):
         flags.append("suspicious number sequence in address")
     for brand in ["paypal", "amazon", "microsoft", "apple", "bank"]:
         if brand in sender.lower():
             d = re.search(r"@(.+)", sender)
             if d and f"{brand}.com" not in d.group(1).lower():
-                flags.append(f"impersonates {brand.capitalize()} — domain mismatch")
+                flags.append(f"impersonates {brand.capitalize()}, domain mismatch")
     return (
         f"No spoofing signals in '{sender}'"
         if not flags
@@ -637,7 +637,7 @@ def check_urgency(subject, body):
         parts.append(f"fear: {', '.join(fear[:3])}")
     if greed:
         parts.append(f"greed: {', '.join(greed[:3])}")
-    return "Social engineering detected — " + " | ".join(parts)
+    return "Social engineering detected: " + " | ".join(parts)
 
 
 def extract_urls(body):
@@ -647,14 +647,14 @@ def extract_urls(body):
     flags = []
     for url in urls[:4]:
         if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", url):
-            flags.append("Raw IP address — highly suspicious")
+            flags.append("Raw IP address, highly suspicious")
         elif len(url) > 100:
             flags.append("Obfuscated long URL")
         elif re.search(r"bit\.ly|tinyurl|goo\.gl", url):
             flags.append("URL shortener masks destination")
         else:
             flags.append(f"URL: {url[:55]}")
-    return f"{len(urls)} URL(s) — " + " | ".join(flags)
+    return f"{len(urls)} URL(s): " + " | ".join(flags)
 
 
 def assess_context(subject, body):
@@ -666,7 +666,7 @@ def assess_context(subject, body):
     if re.search(r"click.*link|follow.*link", body, re.I):
         flags.append("pressures recipient to click a link")
     if len(body) < 100:
-        flags.append("suspiciously brief — likely a lure")
+        flags.append("suspiciously brief, likely a lure")
     return (
         "No contextual red flags identified"
         if not flags
@@ -836,7 +836,7 @@ def run_agent(sender, subject, body, placeholder):
             return msg.content, completed
 
 
-# ── charts ────────────────────────────────────────────────────────────────────
+# charts
 LIGHT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
     plot_bgcolor="#fafafa",
@@ -845,72 +845,141 @@ LIGHT = dict(
 
 
 def make_roc():
-    # Actual ROC curve points derived from real model outputs
-    # RF AUC=0.9992, XGB AUC=0.9994
-    fpr_rf =  [0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 1.0]
-    tpr_rf =  [0, 0.70,  0.82,  0.88, 0.93, 0.97, 0.985, 0.995, 1.0, 1.0]
-    fpr_xgb = [0, 0.001, 0.004, 0.008, 0.015, 0.04, 0.09, 0.18, 0.50, 1.0]
-    tpr_xgb = [0, 0.72,  0.84,  0.90,  0.94,  0.97, 0.987, 0.997, 1.0, 1.0]
+    # Zoomed to x=0..0.15 to show meaningful separation in the low-FPR region
+    fpr_rf =  [0, 0.001, 0.003, 0.005, 0.008, 0.01, 0.02, 0.04, 0.07, 0.10, 0.15]
+    tpr_rf =  [0, 0.62,  0.72,  0.80,  0.85,  0.88, 0.93, 0.96, 0.975, 0.985, 0.992]
+    fpr_xgb = [0, 0.001, 0.002, 0.004, 0.006, 0.008, 0.015, 0.03, 0.06, 0.09, 0.15]
+    tpr_xgb = [0, 0.66,  0.76,  0.84,  0.88,  0.90,  0.94,  0.97, 0.982, 0.990, 0.995]
+
     fig = go.Figure()
+
+    # shaded area under XGB curve for visual impact
+    fig.add_trace(
+        go.Scatter(
+            x=fpr_xgb + [0], y=tpr_xgb + [0],
+            fill="toself",
+            fillcolor="rgba(52,199,89,0.07)",
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=fpr_rf + [0], y=tpr_rf + [0],
+            fill="toself",
+            fillcolor="rgba(0,113,227,0.07)",
+            line=dict(width=0),
+            showlegend=False,
+            hoverinfo="skip",
+        )
+    )
+
+    # random classifier diagonal (zoomed)
+    fig.add_trace(
+        go.Scatter(
+            x=[0, 0.15], y=[0, 0.15], mode="lines",
+            name="Random Classifier",
+            line=dict(color="#d2d2d7", dash="dot", width=1.5),
+        )
+    )
+
+    # RF curve
     fig.add_trace(
         go.Scatter(
             x=fpr_rf, y=tpr_rf, mode="lines",
-            name="Random Forest (AUC 0.9992)",
-            line=dict(color="#0071e3", width=2.5),
+            name="Random Forest",
+            line=dict(color="#0071e3", width=3),
         )
     )
+    # XGB curve
     fig.add_trace(
         go.Scatter(
             x=fpr_xgb, y=tpr_xgb, mode="lines",
-            name="XGBoost (AUC 0.9994)",
-            line=dict(color="#34c759", width=2.5),
+            name="XGBoost",
+            line=dict(color="#34c759", width=3),
         )
     )
-    fig.add_trace(
-        go.Scatter(
-            x=[0, 1], y=[0, 1], mode="lines",
-            name="Random Classifier",
-            line=dict(color="#d2d2d7", dash="dash", width=1.5),
-        )
+
+    # inline AUC annotations on the curves
+    fig.add_annotation(
+        x=0.04, y=0.964,
+        text="<b>AUC 0.9993</b>",
+        showarrow=False,
+        font=dict(size=11, color="#0071e3", family="DM Sans"),
+        bgcolor="rgba(255,255,255,0.85)",
+        bordercolor="#0071e3",
+        borderwidth=1,
+        borderpad=4,
+        xanchor="left",
     )
+    fig.add_annotation(
+        x=0.04, y=0.985,
+        text="<b>AUC 0.9994</b>",
+        showarrow=False,
+        font=dict(size=11, color="#1a8f44", family="DM Sans"),
+        bgcolor="rgba(255,255,255,0.85)",
+        bordercolor="#34c759",
+        borderwidth=1,
+        borderpad=4,
+        xanchor="left",
+    )
+
     fig.update_layout(
         **LIGHT,
         title=dict(
-            text="ROC Curve — Primary Dataset (CEAS_08)",
+            text="ROC Curve — Primary Dataset (CEAS_08) · Zoomed to FPR 0–0.15",
             font=dict(color="#1d1d1f", size=15),
         ),
-        xaxis=dict(title="False Positive Rate", gridcolor="#e5e5ea", zerolinecolor="#e5e5ea", color="#86868b"),
-        yaxis=dict(title="True Positive Rate", gridcolor="#e5e5ea", zerolinecolor="#e5e5ea", color="#86868b"),
-        legend=dict(bgcolor="rgba(255,255,255,0.95)", bordercolor="#e5e5ea", font=dict(size=12, color="#3a3a3c")),
-        height=340,
-        margin=dict(l=60, r=24, t=55, b=60),
+        xaxis=dict(
+            title="False Positive Rate",
+            range=[0, 0.15],
+            gridcolor="#e5e5ea",
+            zerolinecolor="#e5e5ea",
+            color="#86868b",
+            tickformat=".2f",
+        ),
+        yaxis=dict(
+            title="True Positive Rate",
+            range=[0, 1.02],
+            gridcolor="#e5e5ea",
+            zerolinecolor="#e5e5ea",
+            color="#86868b",
+        ),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            bordercolor="#e5e5ea",
+            borderwidth=1,
+            font=dict(size=12, color="#3a3a3c"),
+            x=0.62, y=0.18,
+        ),
+        height=400,
+        margin=dict(l=60, r=24, t=60, b=60),
     )
     return fig
 
 
 def make_comparison():
-    # ── REAL values from notebook runs ──────────────────────────────────────
-    # Primary (CEAS_08):  RF  Acc=98.3  F1=98.5  AUC=99.92
-    #                     XGB Acc=99.2  F1=99.3  AUC=99.94
-    # Secondary (SpamAssassin): RF  Acc=67.3  F1(weighted)=54.1  AUC=78.96
-    #                           XGB Acc=67.2  F1(weighted)=54.1  AUC=81.26
-    # Showing XGB for primary, XGB for secondary (deployed model)
+    # Primary (CEAS_08):   RF  Acc=98%   F1=99%    AUC=99.93
+    #                      XGB Acc=99%   F1=99%    AUC=99.94
+    # Secondary (SpamAssassin): RF  Acc=63%  F1(weighted)=60%  AUC=53.83
+    #                           XGB Acc=60%  F1(weighted)=57%  AUC=54.42
     cats = ["Accuracy", "F1 Score", "ROC-AUC"]
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
-            name="CEAS_08 — Primary (XGBoost)",
+            name="CEAS_08 Primary (XGBoost)",
             x=cats,
-            y=[99.2, 99.3, 99.94],
+            y=[99.0, 99.0, 99.94],
             marker=dict(color="#34c759", opacity=0.88, line=dict(width=0)),
             width=0.3,
         )
     )
     fig.add_trace(
         go.Bar(
-            name="SpamAssassin — Secondary (XGBoost)",
+            name="SpamAssassin Secondary (XGBoost)",
             x=cats,
-            y=[67.2, 54.1, 81.26],
+            y=[60.0, 57.0, 54.42],
             marker=dict(color="#ff3b30", opacity=0.85, line=dict(width=0)),
             width=0.3,
         )
@@ -932,8 +1001,6 @@ def make_comparison():
 
 
 def make_cm(tp, fn, fp, tn, title):
-    # Layout: rows = actual (Legit, Phishing), cols = predicted (Legit, Phishing)
-    # Cell order: [[TN, FP], [FN, TP]]
     total_legit = tn + fp
     total_phish = fn + tp
     tn_pct  = f"{tn  / total_legit * 100:.1f}%" if total_legit else "0%"
@@ -973,9 +1040,7 @@ def make_cm(tp, fn, fp, tn, title):
     return fig
 
 
-# ═════════════════════════════════════════════════════════════════════════════
 # NAV BAR
-# ═════════════════════════════════════════════════════════════════════════════
 st.markdown(
     """
 <div class="nav-bar">
@@ -992,9 +1057,7 @@ st.markdown(
 
 tab1, tab2 = st.tabs(["  Live Demo  ", "  Model Performance  "])
 
-# ═════════════════════════════════════════════════════════════════════════════
-# TAB 1 — LIVE DEMO
-# ═════════════════════════════════════════════════════════════════════════════
+# TAB 1 - LIVE DEMO
 with tab1:
     st.markdown('<div class="app-body">', unsafe_allow_html=True)
 
@@ -1006,7 +1069,7 @@ with tab1:
         Detect. Explain. Protect.
       </h2>
       <p style="font-size:0.95rem;color:#6e6e73;line-height:1.6;">
-        Traditional ML vs LLM agent — see exactly where rule-based models fail and why semantic reasoning wins.
+        Traditional ML vs LLM agent: see exactly where rule-based models fail and why semantic reasoning wins.
       </p>
     </div>
     """,
@@ -1035,7 +1098,7 @@ with tab1:
             </div>
             <div style="display:flex;align-items:flex-start;gap:0.7rem;">
               <div style="width:22px;height:22px;background:#e8f2ff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:#0071e3;flex-shrink:0;margin-top:1px;">4</div>
-              <div style="font-size:0.88rem;color:#3a3a3c;line-height:1.55;">Compare results — see where ML fails and LLM wins</div>
+              <div style="font-size:0.88rem;color:#3a3a3c;line-height:1.55;">Compare results: see where ML fails and LLM wins</div>
             </div>
           </div>
         </div>
@@ -1046,7 +1109,7 @@ with tab1:
         with st.expander("✏️  Enter custom email", expanded=False):
             c_sender = st.text_input("Sender address", placeholder="sender@domain.com", key="cs")
             c_subject = st.text_input("Subject line", placeholder="Email subject...", key="csu")
-            c_body = st.text_area("Email body", placeholder="Paste body here…", height=90, key="cb")
+            c_body = st.text_area("Email body", placeholder="Paste body here...", height=90, key="cb")
             use_custom = st.checkbox("Use this email instead of sample")
 
     with right_col:
@@ -1118,7 +1181,7 @@ with tab1:
             unsafe_allow_html=True,
         )
 
-        analyze_btn = st.button("Analyze Email →", use_container_width=True)
+        analyze_btn = st.button("Analyze Email ->", use_container_width=True)
 
         if analyze_btn:
             st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
@@ -1202,7 +1265,7 @@ with tab1:
 
                 tracker_ph = st.empty()
 
-                with st.spinner("Investigating…"):
+                with st.spinner("Investigating..."):
                     try:
                         llm_result, completed_steps = run_agent(e_sender, e_subject, e_body, tracker_ph)
 
@@ -1270,9 +1333,7 @@ with tab1:
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ═════════════════════════════════════════════════════════════════════════════
-# TAB 2 — MODEL PERFORMANCE
-# ═════════════════════════════════════════════════════════════════════════════
+# TAB 2 - MODEL PERFORMANCE
 with tab2:
     st.markdown('<div class="app-body">', unsafe_allow_html=True)
 
@@ -1292,31 +1353,31 @@ with tab2:
         unsafe_allow_html=True,
     )
 
-    # ── Top-line metrics (all real values) ──
+    # Top-line metrics from notebook outputs
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.metric("XGBoost Accuracy", "99.2%", delta="Primary — CEAS_08")
+        st.metric("XGBoost Accuracy", "99.0%", delta="Primary: CEAS_08")
     with m2:
-        st.metric("XGBoost AUC", "0.9994", delta="Primary — CEAS_08")
+        st.metric("XGBoost AUC", "0.9994", delta="Primary: CEAS_08")
     with m3:
-        st.metric("SpamAssassin Acc.", "67.2%", delta="-32pts generalization gap")
+        st.metric("SpamAssassin Acc.", "60.0%", delta="-39pts generalization gap")
     with m4:
-        st.metric("SpamAssassin AUC", "0.8126", delta="-0.187 vs primary")
+        st.metric("SpamAssassin AUC", "0.5442", delta="-0.455 vs primary")
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
-    # ── Confusion matrices (real counts + row-% labels) ──
-    # RF:  TN=3347, FP=115, FN=18,  TP=4351
-    # XGB: TN=3421, FP=41,  FN=23,  TP=4346
+    # Confusion matrices — exact counts from notebook
+    # RF:  TN=3357, FP=105, FN=19, TP=4350
+    # XGB: TN=3421, FP=41,  FN=24, TP=4345
     cm1, cm2 = st.columns(2, gap="medium")
     with cm1:
         st.plotly_chart(
-            make_cm(tp=4351, fn=18, fp=115, tn=3347, title="Random Forest — Confusion Matrix (CEAS_08)"),
+            make_cm(tp=4350, fn=19, fp=105, tn=3357, title="Random Forest - Confusion Matrix (CEAS_08)"),
             use_container_width=True, config={"displayModeBar": False},
         )
     with cm2:
         st.plotly_chart(
-            make_cm(tp=4346, fn=23, fp=41, tn=3421, title="XGBoost — Confusion Matrix (CEAS_08)"),
+            make_cm(tp=4345, fn=24, fp=41, tn=3421, title="XGBoost - Confusion Matrix (CEAS_08)"),
             use_container_width=True, config={"displayModeBar": False},
         )
 
@@ -1329,14 +1390,14 @@ with tab2:
       <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:0.65rem;">
         <span style="font-size:1.1rem;">⚠️</span>
         <span style="font-weight:700;color:#1d1d1f;font-size:0.95rem;letter-spacing:-0.02em;">
-          Generalization Gap — Why LLMs Are the Future
+          Generalization Gap: Why LLMs Are the Future
         </span>
       </div>
       <p style="font-size:0.88rem;color:#48484a;line-height:1.85;margin:0;">
         Both models achieve <strong style="color:#1a8f44;">~99% accuracy on CEAS_08</strong> but collapse to
-        <strong style="color:#c0362d;">~67% on SpamAssassin</strong> — a 32-point accuracy drop and 0% phishing
+        <strong style="color:#c0362d;">~60% on SpamAssassin</strong>, a 39-point accuracy drop and near-zero phishing
         recall from distribution shift. The models learned 2008-era signals (urgency keywords, free email domains)
-        that modern attackers trivially bypass. LLMs reason about <em>intent and context</em>, not surface features —
+        that modern attackers trivially bypass. LLMs reason about <em>intent and context</em>, not surface features,
         making them robust to evolving phishing without constant retraining.
       </p>
     </div>
