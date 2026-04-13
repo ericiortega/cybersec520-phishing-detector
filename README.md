@@ -110,6 +110,21 @@ The app will open at `http://localhost:8501`
 | SpamAssassin (Secondary) | Random Forest | 63% | 60% | 0.5383 |
 | SpamAssassin (Secondary) | XGBoost | 60% | 57% | 0.5442 |
 
+## Visualizations
+
+**Confusion Matrices — CEAS_08 (Primary)**
+![Confusion Matrices](models/confusion_matrices.png)
+
+**Confusion Matrices — SpamAssassin (Secondary)**
+![Confusion Matrices SpamAssassin](models/confusion_matrices_spamassassin.png)
+
+**ROC Curves**
+![ROC Curves](models/roc_curves.png)
+
+**Model Comparison**
+![Model Comparison](models/model_comparison.png) 
+
+---
 ### Key Finding: The 39-Point Generalization Gap
 
 Both models collapse from ~99% to ~60% accuracy on SpamAssassin — a 39-point drop caused by distribution shift. Critically, **both models achieve near-zero phishing recall on SpamAssassin**, defaulting to predicting the majority of emails as legitimate. Three root causes:
