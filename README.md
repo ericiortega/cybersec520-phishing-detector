@@ -1,7 +1,9 @@
 # ShieldAI — Phishing Email Detector
 **CYBERSEC 520 Final Project · Duke University · April 2026**
 
-A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application.
+Name: Eric Ortega Rodriguez 
+
+A side-by-side comparison of traditional ML and LLM-based phishing detection, deployed as an interactive Streamlit application. An initiative that is needed to stay on top of constant cybersecurity threats sophistication. 
 
 ---
 

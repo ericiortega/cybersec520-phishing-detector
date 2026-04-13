@@ -10,6 +10,7 @@ from scipy.sparse import hstack, csr_matrix
 from openai import OpenAI
 from dotenv import load_dotenv
 import plotly.graph_objects as go
+
 #  Claude was used on was used in the development of the Streamlit app UI and for assistance with code structure.
 load_dotenv()
 
