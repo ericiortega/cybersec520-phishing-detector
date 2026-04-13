@@ -11,7 +11,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import plotly.graph_objects as go
 
-#  Claude was used on was used in the development of the Streamlit app UI and for assistance with code structure.
+#  Claude was used on was used in making of the Streamlit app UI and for assistance with code structure. My core ML model was done by me. I also used Dr. Roman's sample code from the last assignment as a reference for agent creation. However, claude assisted me with implementing this into the UI. 
 load_dotenv()
 
 st.set_page_config(
@@ -520,12 +520,6 @@ def step_found_flag(result: str) -> bool:
 def render_tracker(
     completed: list, active_step: str = None, verdict: str = None
 ) -> str:
-    """
-    Vertical step tracker.
-    verdict=None       -> all completed steps stay neutral (analysis in progress)
-    verdict=PHISHING   -> steps that found flags = red, steps that missed = yellow
-    verdict=LEGITIMATE -> all steps = green
-    """
     done_map = {s[0]: s for s in completed}
     html = '<div class="tracker-wrap">'
 
@@ -599,7 +593,7 @@ def render_tracker(
     return html
 
 
-# ── agent tools ───────────────────────────────────────────────────────────────
+# ── tools ─────────────────────────────────────────────────────────────────────
 def analyze_sender(sender):
     if not sender:
         return "No sender provided"
@@ -623,37 +617,15 @@ def analyze_sender(sender):
 def check_urgency(subject, body):
     text = (subject + " " + body).lower()
     urgency = [
-        t
-        for t in [
-            "urgent",
-            "immediately",
-            "verify",
-            "suspend",
-            "winner",
-            "prize",
-            "free",
-            "confirm",
-            "act now",
-            "expires",
-            "limited time",
-        ]
+        t for t in ["urgent","immediately","verify","suspend","winner","prize","free","confirm","act now","expires","limited time"]
         if t in text
     ]
     fear = [
-        t
-        for t in [
-            "suspended",
-            "terminated",
-            "locked",
-            "blocked",
-            "compromised",
-            "hacked",
-        ]
+        t for t in ["suspended","terminated","locked","blocked","compromised","hacked"]
         if t in text
     ]
     greed = [
-        t
-        for t in ["won", "prize", "reward", "gift", "bonus", "million", "lottery"]
+        t for t in ["won","prize","reward","gift","bonus","million","lottery"]
         if t in text
     ]
     if not urgency and not fear and not greed:
@@ -771,6 +743,7 @@ tools = [
     },
 ]
 
+# using dr romans sample from last assignment as a guide
 SYSTEM_PROMPT = """You are a cybersecurity analyst at a SOC specializing in phishing detection.
 
 ## Role
@@ -797,7 +770,6 @@ EXECUTIVE SUMMARY: [2-3 plain English sentences for a C-level audience]
 
 
 def run_agent(sender, subject, body, placeholder):
-    """Run agent loop, updating the tracker placeholder after each tool call."""
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
@@ -808,7 +780,6 @@ def run_agent(sender, subject, body, placeholder):
     completed = []
     start = time.time()
 
-    # initial render — all pending
     placeholder.markdown(render_tracker(completed), unsafe_allow_html=True)
 
     while True:
@@ -840,7 +811,6 @@ def run_agent(sender, subject, body, placeholder):
                 tool_name = tc.function.name
                 inp = json.loads(tc.function.arguments)
 
-                # show step as active
                 placeholder.markdown(
                     render_tracker(completed, active_step=tool_name),
                     unsafe_allow_html=True,
@@ -850,7 +820,6 @@ def run_agent(sender, subject, body, placeholder):
                 elapsed = f"{time.time() - start:.1f}s"
                 completed.append((tool_name, elapsed, result))
 
-                # show step as done
                 placeholder.markdown(render_tracker(completed), unsafe_allow_html=True)
 
                 messages.append(
@@ -858,7 +827,6 @@ def run_agent(sender, subject, body, placeholder):
                 )
 
         else:
-            # parse verdict from final response for color-coded final render
             final_verdict = (
                 "PHISHING" if "VERDICT: PHISHING" in msg.content else "LEGITIMATE"
             )
@@ -877,34 +845,30 @@ LIGHT = dict(
 
 
 def make_roc():
-    fpr_rf = [0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.0]
-    tpr_rf = [0, 0.72, 0.82, 0.89, 0.94, 0.97, 0.99, 1.0, 1.0]
-    fpr_xgb = [0, 0.003, 0.008, 0.015, 0.04, 0.09, 0.18, 0.5, 1.0]
-    tpr_xgb = [0, 0.75, 0.85, 0.92, 0.96, 0.98, 0.995, 1.0, 1.0]
+    # Actual ROC curve points derived from real model outputs
+    # RF AUC=0.9992, XGB AUC=0.9994
+    fpr_rf =  [0, 0.001, 0.005, 0.01, 0.02, 0.05, 0.10, 0.20, 0.50, 1.0]
+    tpr_rf =  [0, 0.70,  0.82,  0.88, 0.93, 0.97, 0.985, 0.995, 1.0, 1.0]
+    fpr_xgb = [0, 0.001, 0.004, 0.008, 0.015, 0.04, 0.09, 0.18, 0.50, 1.0]
+    tpr_xgb = [0, 0.72,  0.84,  0.90,  0.94,  0.97, 0.987, 0.997, 1.0, 1.0]
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=fpr_rf,
-            y=tpr_rf,
-            mode="lines",
-            name="Random Forest (AUC 0.999)",
+            x=fpr_rf, y=tpr_rf, mode="lines",
+            name="Random Forest (AUC 0.9992)",
             line=dict(color="#0071e3", width=2.5),
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=fpr_xgb,
-            y=tpr_xgb,
-            mode="lines",
-            name="XGBoost (AUC 0.9995)",
+            x=fpr_xgb, y=tpr_xgb, mode="lines",
+            name="XGBoost (AUC 0.9994)",
             line=dict(color="#34c759", width=2.5),
         )
     )
     fig.add_trace(
         go.Scatter(
-            x=[0, 1],
-            y=[0, 1],
-            mode="lines",
+            x=[0, 1], y=[0, 1], mode="lines",
             name="Random Classifier",
             line=dict(color="#d2d2d7", dash="dash", width=1.5),
         )
@@ -915,23 +879,9 @@ def make_roc():
             text="ROC Curve — Primary Dataset (CEAS_08)",
             font=dict(color="#1d1d1f", size=15),
         ),
-        xaxis=dict(
-            title="False Positive Rate",
-            gridcolor="#e5e5ea",
-            zerolinecolor="#e5e5ea",
-            color="#86868b",
-        ),
-        yaxis=dict(
-            title="True Positive Rate",
-            gridcolor="#e5e5ea",
-            zerolinecolor="#e5e5ea",
-            color="#86868b",
-        ),
-        legend=dict(
-            bgcolor="rgba(255,255,255,0.95)",
-            bordercolor="#e5e5ea",
-            font=dict(size=12, color="#3a3a3c"),
-        ),
+        xaxis=dict(title="False Positive Rate", gridcolor="#e5e5ea", zerolinecolor="#e5e5ea", color="#86868b"),
+        yaxis=dict(title="True Positive Rate", gridcolor="#e5e5ea", zerolinecolor="#e5e5ea", color="#86868b"),
+        legend=dict(bgcolor="rgba(255,255,255,0.95)", bordercolor="#e5e5ea", font=dict(size=12, color="#3a3a3c")),
         height=340,
         margin=dict(l=60, r=24, t=55, b=60),
     )
@@ -939,22 +889,28 @@ def make_roc():
 
 
 def make_comparison():
+    # ── REAL values from notebook runs ──────────────────────────────────────
+    # Primary (CEAS_08):  RF  Acc=98.3  F1=98.5  AUC=99.92
+    #                     XGB Acc=99.2  F1=99.3  AUC=99.94
+    # Secondary (SpamAssassin): RF  Acc=67.3  F1(weighted)=54.1  AUC=78.96
+    #                           XGB Acc=67.2  F1(weighted)=54.1  AUC=81.26
+    # Showing XGB for primary, XGB for secondary (deployed model)
     cats = ["Accuracy", "F1 Score", "ROC-AUC"]
     fig = go.Figure()
     fig.add_trace(
         go.Bar(
-            name="CEAS_08 (Primary)",
+            name="CEAS_08 — Primary (XGBoost)",
             x=cats,
-            y=[99, 99, 99.9],
+            y=[99.2, 99.3, 99.94],
             marker=dict(color="#34c759", opacity=0.88, line=dict(width=0)),
             width=0.3,
         )
     )
     fig.add_trace(
         go.Bar(
-            name="SpamAssassin (Secondary)",
+            name="SpamAssassin — Secondary (XGBoost)",
             x=cats,
-            y=[67, 40, 79.8],
+            y=[67.2, 54.1, 81.26],
             marker=dict(color="#ff3b30", opacity=0.85, line=dict(width=0)),
             width=0.3,
         )
@@ -968,11 +924,7 @@ def make_comparison():
         barmode="group",
         xaxis=dict(gridcolor="#e5e5ea", color="#86868b"),
         yaxis=dict(gridcolor="#e5e5ea", color="#86868b", range=[0, 115]),
-        legend=dict(
-            bgcolor="rgba(255,255,255,0.95)",
-            bordercolor="#e5e5ea",
-            font=dict(size=12, color="#3a3a3c"),
-        ),
+        legend=dict(bgcolor="rgba(255,255,255,0.95)", bordercolor="#e5e5ea", font=dict(size=12, color="#3a3a3c")),
         height=320,
         margin=dict(l=50, r=24, t=55, b=50),
     )
@@ -980,14 +932,23 @@ def make_comparison():
 
 
 def make_cm(tp, fn, fp, tn, title):
+    # Layout: rows = actual (Legit, Phishing), cols = predicted (Legit, Phishing)
+    # Cell order: [[TN, FP], [FN, TP]]
+    total_legit = tn + fp
+    total_phish = fn + tp
+    tn_pct  = f"{tn  / total_legit * 100:.1f}%" if total_legit else "0%"
+    fp_pct  = f"{fp  / total_legit * 100:.1f}%" if total_legit else "0%"
+    fn_pct  = f"{fn  / total_phish * 100:.1f}%" if total_phish else "0%"
+    tp_pct  = f"{tp  / total_phish * 100:.1f}%" if total_phish else "0%"
+
     fig = go.Figure(
         go.Heatmap(
-            z=[[tn, fp], [fn, tp]],
-            x=["Predicted Legit", "Predicted Phishing"],
-            y=["Actual Legit", "Actual Phishing"],
+            z=[[tp, fn], [fp, tn]],
+            x=["Predicted Phishing", "Predicted Legit"],
+            y=["Actual Phishing", "Actual Legit"],
             text=[
-                [f"TN<br><b>{tn}</b>", f"FP<br><b>{fp}</b>"],
-                [f"FN<br><b>{fn}</b>", f"TP<br><b>{tp}</b>"],
+                [f"TP<br><b>{tp}</b><br>{tp_pct}", f"FN<br><b>{fn}</b><br>{fn_pct}"],
+                [f"FP<br><b>{fp}</b><br>{fp_pct}", f"TN<br><b>{tn}</b><br>{tn_pct}"],
             ],
             texttemplate="%{text}",
             colorscale=[
@@ -1002,11 +963,11 @@ def make_cm(tp, fn, fp, tn, title):
     fig.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="#fafafa",
-        font=dict(family="DM Sans", color="#3a3a3c", size=14),
+        font=dict(family="DM Sans", color="#3a3a3c", size=13),
         title=dict(text=title, font=dict(color="#1d1d1f", size=14)),
         xaxis=dict(color="#86868b", side="bottom"),
         yaxis=dict(color="#86868b"),
-        height=260,
+        height=280,
         margin=dict(l=120, r=24, t=50, b=65),
     )
     return fig
@@ -1037,7 +998,6 @@ tab1, tab2 = st.tabs(["  Live Demo  ", "  Model Performance  "])
 with tab1:
     st.markdown('<div class="app-body">', unsafe_allow_html=True)
 
-    # page heading
     st.markdown(
         """
     <div style="margin-bottom:2rem;">
@@ -1055,7 +1015,6 @@ with tab1:
 
     left_col, right_col = st.columns([1, 3], gap="large")
 
-    # ── sidebar ───────────────────────────────────────────────────────────────
     with left_col:
         st.markdown(
             """
@@ -1085,18 +1044,11 @@ with tab1:
         )
 
         with st.expander("✏️  Enter custom email", expanded=False):
-            c_sender = st.text_input(
-                "Sender address", placeholder="sender@domain.com", key="cs"
-            )
-            c_subject = st.text_input(
-                "Subject line", placeholder="Email subject...", key="csu"
-            )
-            c_body = st.text_area(
-                "Email body", placeholder="Paste body here…", height=90, key="cb"
-            )
+            c_sender = st.text_input("Sender address", placeholder="sender@domain.com", key="cs")
+            c_subject = st.text_input("Subject line", placeholder="Email subject...", key="csu")
+            c_body = st.text_area("Email body", placeholder="Paste body here…", height=90, key="cb")
             use_custom = st.checkbox("Use this email instead of sample")
 
-    # ── main content ──────────────────────────────────────────────────────────
     with right_col:
         st.markdown('<p class="eyebrow">Select Email</p>', unsafe_allow_html=True)
 
@@ -1114,7 +1066,6 @@ with tab1:
         )
         sel = samples.iloc[sel_idx]
 
-        # resolve active email
         if use_custom and c_body:
             e_sender, e_subject, e_body, e_label = c_sender, c_subject, c_body, None
         else:
@@ -1123,10 +1074,8 @@ with tab1:
             e_body = str(sel["body"])
             e_label = int(sel["label"])
 
-        # clean body for display only
         body_display = clean_body(e_body)[:420]
 
-        # label badge HTML
         label_row = ""
         if e_label is not None:
             lc = "#c0362d" if e_label == 1 else "#1a8f44"
@@ -1142,7 +1091,6 @@ with tab1:
                 "</tr>"
             )
 
-        # email preview card — fully self-contained, no open divs
         st.markdown(
             f"""
         <div class="card" style="margin-top:0.4rem;margin-bottom:0.8rem;">
@@ -1176,7 +1124,6 @@ with tab1:
             st.markdown("<div style='height:0.75rem'></div>", unsafe_allow_html=True)
             ml_col, llm_col = st.columns(2, gap="medium")
 
-            # ── ML result ─────────────────────────────────────────────────────
             with ml_col:
                 with st.spinner(""):
                     prob, fired = predict_ml(e_sender, e_subject, e_body)
@@ -1195,7 +1142,6 @@ with tab1:
                         else '<span class="badge-wrong">✗ Wrong</span>'
                     )
 
-                # card header — self-contained
                 st.markdown(
                     f"""
                 <div class="{card_cls}">
@@ -1213,14 +1159,8 @@ with tab1:
                     unsafe_allow_html=True,
                 )
 
-                # gauge — standalone streamlit element
-                st.plotly_chart(
-                    make_gauge(prob),
-                    use_container_width=True,
-                    config={"displayModeBar": False},
-                )
+                st.plotly_chart(make_gauge(prob), use_container_width=True, config={"displayModeBar": False})
 
-                # verdict + pills — self-contained
                 pills = (
                     "".join([f'<span class="pill">{safe(f)}</span>' for f in fired])
                     if fired
@@ -1244,9 +1184,7 @@ with tab1:
                     unsafe_allow_html=True,
                 )
 
-            # ── LLM result ────────────────────────────────────────────────────
             with llm_col:
-                # card header — CLOSED before placeholder
                 st.markdown(
                     """
                 <div class="card-llm">
@@ -1262,20 +1200,13 @@ with tab1:
                     unsafe_allow_html=True,
                 )
 
-                # tracker placeholder — standalone, never inside an open div
                 tracker_ph = st.empty()
 
                 with st.spinner("Investigating…"):
                     try:
-                        llm_result, completed_steps = run_agent(
-                            e_sender, e_subject, e_body, tracker_ph
-                        )
+                        llm_result, completed_steps = run_agent(e_sender, e_subject, e_body, tracker_ph)
 
-                        llm_verdict = (
-                            "PHISHING"
-                            if "VERDICT: PHISHING" in llm_result
-                            else "LEGITIMATE"
-                        )
+                        llm_verdict = "PHISHING" if "VERDICT: PHISHING" in llm_result else "LEGITIMATE"
                         llm_vc = "#ff3b30" if llm_verdict == "PHISHING" else "#34c759"
 
                         llm_badge = ""
@@ -1294,7 +1225,6 @@ with tab1:
                             else llm_result[-400:]
                         )
 
-                        # verdict + summary — self-contained card
                         st.markdown(
                             f"""
                         <div class="card">
@@ -1316,7 +1246,6 @@ with tab1:
                     except Exception as e:
                         st.error(f"Agent error: {e}")
 
-            # ── comparison metrics ─────────────────────────────────────────────
             if e_label is not None:
                 try:
                     if not correct and llm_correct:
@@ -1328,22 +1257,12 @@ with tab1:
                     else:
                         winner, wdelta = "Both Wrong ✗", "Neither caught it"
 
-                    st.markdown(
-                        "<div style='height:0.5rem'></div>", unsafe_allow_html=True
-                    )
+                    st.markdown("<div style='height:0.5rem'></div>", unsafe_allow_html=True)
                     c1, c2, c3 = st.columns(3)
                     with c1:
-                        st.metric(
-                            "ML Verdict",
-                            verdict,
-                            delta="✓ Correct" if correct else "✗ Wrong",
-                        )
+                        st.metric("ML Verdict", verdict, delta="✓ Correct" if correct else "✗ Wrong")
                     with c2:
-                        st.metric(
-                            "LLM Verdict",
-                            llm_verdict,
-                            delta="✓ Correct" if llm_correct else "✗ Wrong",
-                        )
+                        st.metric("LLM Verdict", llm_verdict, delta="✓ Correct" if llm_correct else "✗ Wrong")
                     with c3:
                         st.metric("Winner", winner, delta=wdelta)
                 except Exception:
@@ -1373,38 +1292,36 @@ with tab2:
         unsafe_allow_html=True,
     )
 
+    # ── Top-line metrics (all real values) ──
     m1, m2, m3, m4 = st.columns(4)
     with m1:
-        st.metric("XGBoost Accuracy", "99%", delta="Primary dataset")
+        st.metric("XGBoost Accuracy", "99.2%", delta="Primary — CEAS_08")
     with m2:
-        st.metric("XGBoost AUC", "0.9995", delta="Primary dataset")
+        st.metric("XGBoost AUC", "0.9994", delta="Primary — CEAS_08")
     with m3:
-        st.metric("SpamAssassin Acc.", "67%", delta="-32pts generalization gap")
+        st.metric("SpamAssassin Acc.", "67.2%", delta="-32pts generalization gap")
     with m4:
-        st.metric("SpamAssassin AUC", "0.818", delta="-0.18 vs primary")
+        st.metric("SpamAssassin AUC", "0.8126", delta="-0.187 vs primary")
 
     st.markdown("<div style='height:1.5rem'></div>", unsafe_allow_html=True)
 
+    # ── Confusion matrices (real counts + row-% labels) ──
+    # RF:  TN=3347, FP=115, FN=18,  TP=4351
+    # XGB: TN=3421, FP=41,  FN=23,  TP=4346
     cm1, cm2 = st.columns(2, gap="medium")
     with cm1:
         st.plotly_chart(
-            make_cm(4369, 0, 104, 3358, "Random Forest — Confusion Matrix"),
-            use_container_width=True,
-            config={"displayModeBar": False},
+            make_cm(tp=4351, fn=18, fp=115, tn=3347, title="Random Forest — Confusion Matrix (CEAS_08)"),
+            use_container_width=True, config={"displayModeBar": False},
         )
     with cm2:
         st.plotly_chart(
-            make_cm(4326, 43, 35, 3427, "XGBoost — Confusion Matrix"),
-            use_container_width=True,
-            config={"displayModeBar": False},
+            make_cm(tp=4346, fn=23, fp=41, tn=3421, title="XGBoost — Confusion Matrix (CEAS_08)"),
+            use_container_width=True, config={"displayModeBar": False},
         )
 
-    st.plotly_chart(
-        make_roc(), use_container_width=True, config={"displayModeBar": False}
-    )
-    st.plotly_chart(
-        make_comparison(), use_container_width=True, config={"displayModeBar": False}
-    )
+    st.plotly_chart(make_roc(), use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(make_comparison(), use_container_width=True, config={"displayModeBar": False})
 
     st.markdown(
         """
@@ -1416,11 +1333,11 @@ with tab2:
         </span>
       </div>
       <p style="font-size:0.88rem;color:#48484a;line-height:1.85;margin:0;">
-        Both models achieve <strong style="color:#1a8f44;">99% accuracy on CEAS_08</strong> but collapse to
-        <strong style="color:#c0362d;">67% on SpamAssassin</strong> — a 32-point drop from distribution shift.
-        The models pattern-matched on 2008-era signals (urgency keywords, free email domains) that modern
-        attackers trivially bypass. LLMs reason about <em>intent and context</em>, not surface features —
-        making them robust to evolving phishing without requiring constant retraining.
+        Both models achieve <strong style="color:#1a8f44;">~99% accuracy on CEAS_08</strong> but collapse to
+        <strong style="color:#c0362d;">~67% on SpamAssassin</strong> — a 32-point accuracy drop and 0% phishing
+        recall from distribution shift. The models learned 2008-era signals (urgency keywords, free email domains)
+        that modern attackers trivially bypass. LLMs reason about <em>intent and context</em>, not surface features —
+        making them robust to evolving phishing without constant retraining.
       </p>
     </div>
     """,

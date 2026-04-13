@@ -36,6 +36,7 @@ cybersec520-phishing-detector/
 │   ├── xgb_model.pkl                  # Trained XGBoost model
 │   ├── tfidf_vectorizer.pkl           # Fitted TF-IDF vectorizer
 │   ├── confusion_matrices.png
+│   ├── confusion_matrices_spamassassin.png
 │   ├── roc_curves.png
 │   └── model_comparison.png
 ├── notebook/
@@ -102,16 +103,20 @@ The app will open at `http://localhost:8501`
 
 ## Model Results
 
-| Dataset | Model | Accuracy | AUC-ROC |
-|---|---|---|---|
-| CEAS_08 (Primary) | Random Forest | 98% | 0.9992 |
-| CEAS_08 (Primary) | XGBoost | **99%** | **0.9995** |
-| SpamAssassin (Secondary) | Random Forest | 67% | 0.7202 |
-| SpamAssassin (Secondary) | XGBoost | 67% | 0.8183 |
+| Dataset | Model | Accuracy | F1 (weighted) | AUC-ROC |
+|---|---|---|---|---|
+| CEAS_08 (Primary) | Random Forest | 98.3% | 98.5% | 0.9992 |
+| CEAS_08 (Primary) | XGBoost | **99.2%** | **99.3%** | **0.9994** |
+| SpamAssassin (Secondary) | Random Forest | 67.3% | 54.1% | 0.7896 |
+| SpamAssassin (Secondary) | XGBoost | 67.2% | 54.1% | 0.8126 |
 
 ### Key Finding: The 32-Point Generalization Gap
 
-Both models collapse from 99% to 67% accuracy on SpamAssassin — a 32-point drop caused by distribution shift. The models learned 2008-era spam signals (urgency keywords, free email domains, HTML density) that modern phishing attacks trivially bypass.
+Both models collapse from ~99% to ~67% accuracy on SpamAssassin — a 32-point drop caused by distribution shift. Critically, **both models achieve 0% phishing recall on SpamAssassin**, defaulting to predicting every email as legitimate. Three root causes:
+
+1. **Vocabulary mismatch** — TF-IDF vocabulary was learned from 2008-era CEAS patterns; SpamAssassin uses different terminology
+2. **Class distribution shift** — CEAS_08 is 56% phishing vs SpamAssassin's 33%, miscalibrating the decision boundary
+3. **Feature distribution shift** — handcrafted features (urgency keywords, free email domains) are less predictive in SpamAssassin
 
 This is precisely why LLM-based detection is more robust: the LLM agent reasons about **intent and context**, not surface patterns — making it adaptive to evolving attacks without retraining.
 
@@ -189,14 +194,18 @@ The Jupyter notebook (`notebook/final_phishing_detector.ipynb`) covers:
 - **Section 3** — Preprocessing and feature engineering (TF-IDF + 11 handcrafted features)
 - **Section 4** — Model training (Random Forest + XGBoost)
 - **Section 5** — Primary dataset evaluation (CEAS_08)
-- **Section 6** — Generalizability testing (SpamAssassin)
-- **Section 7** — Threshold tuning analysis
-- **Section 8** — Model export and demo sample generation
+- **Section 6** — Generalizability testing (SpamAssassin) including threshold tuning analysis
+- **Section 7** — Model export and demo sample generation
 
+---
+
+## GenAI Usage
+
+Claude (Anthropic) was used to assist with Streamlit UI structure and code organization. The core ML pipeline, feature engineering, model training, and evaluation logic were written independently. The LLM agent architecture was adapted from Dr. Roman's sample code from the course lab assignment.
 
 ---
 
 ## Author
 
-**Eric Ortega** · Duke University · CYBERSEC 520 · Spring 2026  
+**Eric Ortega Rodriguez** · Duke University · CYBERSEC 520 · Spring 2026  
 GitHub: [github.com/ericiortega](https://github.com/ericiortega)
