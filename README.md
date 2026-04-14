@@ -102,7 +102,7 @@ The app will open at `http://localhost:8501`
 | CEAS_08 | 39,154 emails | Primary training & evaluation dataset |
 | SpamAssassin | 5,796 emails | Secondary generalizability test only (never used in training) |
 
-> Both datasets sourced from Kaggle.
+> [CEAS_08 on Kaggle](https://www.kaggle.com/datasets/doryanay/ceas-08?resource=download) · [SpamAssassin on Kaggle](https://www.kaggle.com/datasets/ganiyuolalekan/spam-assassin-email-classification-dataset)
 
 ---
 

@@ -11,7 +11,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import plotly.graph_objects as go
 
-#  Claude was used on was used in making of the Streamlit app UI and for assistance with code structure. My core ML model was done by me. I also used Dr. Roman's sample code from the last assignment as a reference for agent creation. However, claude assisted me with implementing this into the UI. 
+#  Claude and Figma were used on was used in making of the Streamlit app UI and for assistance with code structure. My core ML model was done by me. I also used Dr. Roman's sample code from the last assignment as a reference for agent creation. However, claude assisted me with implementing this into the UI. 
 load_dotenv()
 
 st.set_page_config(
