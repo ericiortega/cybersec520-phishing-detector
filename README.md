@@ -166,6 +166,9 @@ The app is deployed on Streamlit Cloud.
 4. Add secrets under Advanced Settings
 5. Click Deploy
 
+> **Note on containerization:** This app is deployed via Streamlit Cloud, which handles 
+> containerization natively. A separate Dockerfile was not included as Streamlit Cloud's 
+> managed deployment serves as the equivalent packaging and environment isolation method.
 ---
 
 ## Requirements
@@ -208,7 +211,7 @@ The Jupyter notebook (`notebook/phishing_detector.ipynb`) covers:
 
 ## GenAI Usage
 
-*Claude (Anthropic) assisted with code formatting, Streamlit UI development, and regex parsing of the SpamAssassin dataset; all core logic, modeling, and analysis are my own.*
+*Claude (Anthropic) assisted with code formatting, Streamlit UI development, README formatting, and regex parsing of the SpamAssassin dataset; all core logic, modeling, and analysis are my own.*
 
 The LLM agent architecture was adapted from Dr. Roman's sample code from the course lab assignment.
 
