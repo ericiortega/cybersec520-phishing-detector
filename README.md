@@ -7,6 +7,16 @@ A side-by-side comparison of traditional ML and LLM-based phishing detection, de
 
 ---
 
+## Live Demo
+
+> [ShieldAI on Streamlit Cloud](https://cybersec520-phishing-detector-qeylmuvykpjrvp96rarklg.streamlit.app/)
+
+## Demo Video
+
+> [ShieldAI Demo on YouTube](https://youtu.be/XDcSAY4FOeA)
+
+---
+
 ## Project Overview
 
 This project builds and compares two approaches to phishing email detection:
@@ -15,12 +25,6 @@ This project builds and compares two approaches to phishing email detection:
 - **LLM Agent (GPT 4.1 Mini via Duke LiteLLM)** - a tool-calling agent that reasons semantically about email intent using 4 investigative tools
 
 Key finding: both ML models achieve **99% accuracy on the primary dataset** but collapse to **~60% on SpamAssassin** (secondary dataset) - a 39-point generalization gap that demonstrates why LLM-based detection is more robust to evolving phishing attacks.
-
----
-
-## Live Demo
-
-> [ShieldAI on Streamlit Cloud](https://cybersec520-phishing-detector-qeylmuvykpjrvp96rarklg.streamlit.app/)
 
 ---
 
@@ -40,10 +44,11 @@ cybersec520-phishing-detector/
 │   ├── roc_curves.png
 │   └── model_comparison.png
 ├── notebook/
-│   └── final_phishing_detector.ipynb  # Full analysis, training, and evaluation
+│   └── phishing_detector.ipynb        # Full analysis, training, and evaluation
 ├── app.py                             # Streamlit app (ShieldAI)
 ├── requirements.txt
 ├── env.example                        # Environment variable template (no secrets)
+├── ShieldAI_Presentation.pdf          # Final presentation slides
 └── README.md
 ```
 
@@ -110,21 +115,8 @@ The app will open at `http://localhost:8501`
 | SpamAssassin (Secondary) | Random Forest | 63% | 60% | 0.5383 |
 | SpamAssassin (Secondary) | XGBoost | 60% | 57% | 0.5442 |
 
-## Visualizations
-
-**Confusion Matrices — CEAS_08 (Primary)**
-![Confusion Matrices](models/confusion_matrices.png)
-
-**Confusion Matrices — SpamAssassin (Secondary)**
-![Confusion Matrices SpamAssassin](models/confusion_matrices_spamassassin.png)
-
-**ROC Curves**
-![ROC Curves](models/roc_curves.png)
-
-**Model Comparison**
-![Model Comparison](models/model_comparison.png) 
-
 ---
+
 ### Key Finding: The 39-Point Generalization Gap
 
 Both models collapse from ~99% to ~60% accuracy on SpamAssassin — a 39-point drop caused by distribution shift. Critically, **both models achieve near-zero phishing recall on SpamAssassin**, defaulting to predicting the majority of emails as legitimate. Three root causes:
@@ -201,7 +193,7 @@ pip install -r requirements.txt
 
 ## Notebook
 
-The Jupyter notebook (`notebook/final_phishing_detector.ipynb`) covers:
+The Jupyter notebook (`notebook/phishing_detector.ipynb`) covers:
 
 - **Section 0** - Threat model (threat actor, targets, evasion, operational context)
 - **Section 1** - Setup and imports
@@ -216,11 +208,13 @@ The Jupyter notebook (`notebook/final_phishing_detector.ipynb`) covers:
 
 ## GenAI Usage
 
-Claude (Anthropic) was used to assist with Streamlit UI structure and code organization. The core ML pipeline, feature engineering, model training, and evaluation logic were written independently. The LLM agent architecture was adapted from Dr. Roman's sample code from the course lab assignment.
+*Claude (Anthropic) assisted with code formatting, Streamlit UI development, and regex parsing of the SpamAssassin dataset; all core logic, modeling, and analysis are my own.*
+
+The LLM agent architecture was adapted from Dr. Roman's sample code from the course lab assignment.
 
 ---
 
 ## Author
 
-**Eric Ortega Rodriguez** · Duke University · CYBERSEC 520 · Spring 2026  
+**Eric Ortega Rodriguez** · Duke University · CYBERSEC 520 · Spring 2026
 GitHub: [github.com/ericiortega](https://github.com/ericiortega)
